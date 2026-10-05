@@ -1,0 +1,1054 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Einkaufsliste mit 24-Stunden-Erledigt-Timer, Archiv und automatischer Synchronisierung.">
+  <title>Einkaufsliste</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --surface: rgba(255,255,255,.9);
+      --surface-strong: #ffffff;
+      --text: #1e2329;
+      --muted: #747b84;
+      --line: #e4e7eb;
+      --accent: #2f6fed;
+      --accent-soft: #eaf1ff;
+      --success: #4e9c67;
+      --success-soft: #eaf7ee;
+      --danger: #bb5454;
+      --shadow: 0 16px 50px rgba(27, 35, 45, .08);
+      --shadow-small: 0 6px 22px rgba(27, 35, 45, .08);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(47,111,237,.07), transparent 30%),
+        linear-gradient(180deg, #fafbfc 0%, var(--bg) 100%);
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app-shell {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 26px 0 104px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      background: var(--text);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: var(--shadow-small);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+
+    .brand-subtitle {
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .add-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 13px;
+      background: var(--text);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: var(--shadow-small);
+      transition: transform .16s ease, opacity .16s ease;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover { transform: translateY(-1px); }
+    .add-btn:active { transform: translateY(0); opacity: .9; }
+
+    .main-card {
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+      padding: 20px 22px 17px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .list-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #f0f2f5;
+      font-weight: 700;
+      color: #5e6670;
+    }
+
+    .items {
+      padding: 10px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 12px 8px;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+    }
+
+    .section-label .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .section-label.completed .dot {
+      background: var(--success);
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 28px minmax(0,1fr) auto;
+      gap: 13px;
+      align-items: center;
+      padding: 15px 14px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-lg);
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .item:hover {
+      background: rgba(246,248,250,.9);
+      border-color: #eef0f2;
+    }
+
+    .item + .item {
+      margin-top: 3px;
+    }
+
+    .item.completed {
+      opacity: .76;
+      background: rgba(249,250,251,.75);
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      border: 1.8px solid #bfc5cc;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      transition: all .18s ease;
+      position: relative;
+    }
+
+    .check:hover {
+      border-color: var(--accent);
+    }
+
+    .check.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .check.checked::after {
+      content: "";
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .item-name {
+      min-width: 0;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .completed .item-name {
+      color: #626a73;
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+      text-decoration-color: #9298a0;
+    }
+
+    .timer {
+      min-width: 84px;
+      text-align: right;
+      font-size: 12px;
+      color: #62707d;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .timer.soon {
+      color: var(--danger);
+    }
+
+    .empty {
+      padding: 52px 24px 58px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .empty-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      background: #f0f2f5;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 14px;
+      font-size: 24px;
+    }
+
+    .empty-title {
+      margin: 0 0 6px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .empty-text {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 12px 16px 16px;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .bottom-inner {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .sync-card, .archive-btn {
+      pointer-events: auto;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(229,232,236,.94);
+      box-shadow: var(--shadow-small);
+    }
+
+    .sync-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      border-radius: 15px;
+      min-width: 210px;
+    }
+
+    .sync-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 5px var(--success-soft);
+      flex: 0 0 auto;
+    }
+
+    .sync-text {
+      min-width: 0;
+    }
+
+    .sync-label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      font-weight: 800;
+    }
+
+    .sync-timer {
+      display: block;
+      margin-top: 1px;
+      font-size: 13px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sync-status {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .archive-btn {
+      padding: 12px 16px;
+      border-radius: 15px;
+      font-weight: 800;
+      color: var(--text);
+      background: rgba(255,255,255,.96);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+
+    .archive-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 28px rgba(27, 35, 45, .12);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(17,22,28,.28);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(430px, 100%);
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 28px 80px rgba(17,22,28,.18);
+      padding: 20px;
+    }
+
+    .modal h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .modal p {
+      margin: 7px 0 17px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .item-input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1px solid #d8dde3;
+      border-radius: 13px;
+      outline: none;
+      font-size: 15px;
+      color: var(--text);
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+
+    .item-input:focus {
+      border-color: #9bbaf4;
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .secondary-btn, .primary-btn {
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-weight: 750;
+    }
+
+    .secondary-btn {
+      background: #f0f2f5;
+      color: #515862;
+    }
+
+    .primary-btn {
+      background: var(--text);
+      color: #fff;
+    }
+
+    .archive-panel {
+      width: min(700px, 100%);
+      max-height: min(76vh, 700px);
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 28px 80px rgba(17,22,28,.18);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .archive-top {
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .archive-top h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #f0f2f5;
+      color: #555d66;
+      font-size: 18px;
+    }
+
+    .archive-list {
+      overflow: auto;
+      padding: 10px;
+    }
+
+    .archive-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 12px;
+      border-radius: 14px;
+    }
+
+    .archive-row:hover {
+      background: #f7f8fa;
+    }
+
+    .archive-date {
+      margin-top: 3px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .restore-btn {
+      padding: 8px 11px;
+      background: var(--accent-soft);
+      color: #2d5fb8;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .archive-empty {
+      padding: 44px 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 76px;
+      transform: translate(-50%, 12px);
+      padding: 10px 14px;
+      background: #1f242a;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 750;
+      box-shadow: 0 14px 34px rgba(0,0,0,.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 200;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+
+    .account-actions { display:flex; align-items:center; gap:8px; }
+    .user-email { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--muted); }
+    .account-btn { padding:10px 13px; border-radius:12px; background:#eef2f7; color:var(--text); font-weight:750; }
+    .auth-modal .modal-actions { margin-top:12px; }
+    .auth-switch { margin-top:12px; text-align:center; font-size:12px; color:var(--muted); }
+    .auth-switch button { background:none; color:var(--accent); font-weight:750; padding:0; }
+
+    @media (max-width: 640px) {
+      .app-shell {
+        width: min(100% - 18px, 1040px);
+        padding-top: 16px;
+      }
+
+      .topbar {
+        margin-bottom: 15px;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .add-btn {
+        padding: 10px 13px;
+      }
+
+      .main-card {
+        border-radius: 18px;
+      }
+
+      .list-header {
+        padding: 16px;
+      }
+
+      .item {
+        grid-template-columns: 28px minmax(0,1fr);
+        padding: 13px 10px;
+      }
+
+      .timer {
+        grid-column: 2;
+        text-align: left;
+        margin-top: -7px;
+      }
+
+      .completed .timer {
+        margin-top: -7px;
+      }
+
+      .bottom-inner {
+        width: calc(100% - 18px);
+      }
+
+      .sync-card {
+        min-width: 0;
+        padding: 9px 11px;
+      }
+
+      .sync-status {
+        display: none;
+      }
+
+      .archive-btn {
+        padding: 11px 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">✓</div>
+        <div>
+          <h1 class="brand-title">Einkaufsliste</h1>
+          <p class="brand-subtitle">Offene Dinge zuerst. Erledigte Dinge unten. Menschheit gerettet.</p>
+        </div>
+      </div>
+      <div class="account-actions"><span class="user-email" id="userEmail"></span><button class="account-btn" id="openAuth">Anmelden</button></div>
+    </header>
+
+    <main class="main-card">
+      <div class="list-header">
+        <h2 class="list-title">Meine Liste</h2>
+        <div class="stats">
+          <span id="openCount">0 offen</span>
+          <span class="pill" id="doneCount">0 erledigt</span>
+        </div>
+      </div>
+      <section class="items" id="items"></section>
+    </main>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="bottom-inner">
+      <div class="sync-card" title="Die Daten werden über Firebase Firestore synchronisiert.">
+        <span class="sync-dot" id="syncDot"></span>
+        <div class="sync-text">
+          <span class="sync-label">Synchronisierung</span>
+          <span class="sync-timer" id="syncTimer">Live</span>
+        </div>
+        <span class="sync-status" id="syncStatus">bereit</span>
+      </div>
+      <button class="archive-btn" id="openArchive">Archiv</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="addModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+      <h2 id="addTitle">Gegenstand hinzufügen</h2>
+      <p>Eintragen, hinzufügen, weiterleben. Der Gegenstand wird sofort in der offenen Liste angezeigt.</p>
+      <form id="addForm">
+        <div class="input-wrap">
+          <input class="item-input" id="itemInput" maxlength="140" autocomplete="off" placeholder="z. B. Milch, Äpfel, Brot">
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" id="cancelAdd">Abbrechen</button>
+          <button class="primary-btn" type="submit">Hinzufügen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="archiveModal" aria-hidden="true">
+    <div class="archive-panel" role="dialog" aria-modal="true" aria-labelledby="archiveTitle">
+      <div class="archive-top">
+        <h2 id="archiveTitle">Archiv</h2>
+        <button class="close-btn" id="closeArchive" aria-label="Archiv schließen">×</button>
+      </div>
+      <div class="archive-list" id="archiveList"></div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop auth-modal" id="authModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+      <h2 id="authTitle">Anmelden</h2>
+      <p id="authText">Melde dich an, damit deine Einkaufsliste auf allen Geräten verfügbar ist.</p>
+      <form id="authForm">
+        <div class="input-wrap"><input class="item-input" id="authEmail" type="email" autocomplete="email" placeholder="E-Mail-Adresse" required></div>
+        <div class="input-wrap" style="margin-top:8px"><input class="item-input" id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="Passwort" required></div>
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" id="cancelAuth">Abbrechen</button>
+          <button class="primary-btn" type="submit" id="authSubmit">Anmelden</button>
+        </div>
+      </form>
+      <div class="auth-switch"><span id="authSwitchText">Noch kein Konto?</span> <button type="button" id="authSwitch">Registrieren</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+    // Firebase Console > Projekteinstellungen > Deine Apps > Web-App
+    // Die folgenden Werte durch deine Firebase-Konfiguration ersetzen.
+    const firebaseConfig = {
+      apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0RzuaQ9uqD_IzY",
+      authDomain: "einkaufsliste-3bd02.firebaseapp.com",
+      projectId: "einkaufsliste-3bd02",
+      storageBucket: "einkaufsliste-3bd02.firebasestorage.app",
+      messagingSenderId: "339434182545",
+      appId: "1:339434182545:web:560717e656df63e72cec30",
+      measurementId: "G-2Z3KG43NVV"
+    };
+
+    const firebaseConfigured = true;
+    const app = initializeApp(firebaseConfig);
+    const auth = app ? getAuth(app) : null;
+    const db = app ? getFirestore(app) : null;
+
+    const COMPLETE_INTERVAL = 24 * 60 * 60 * 1000;
+    const STORAGE_KEY = "shopping-list-v1";
+    const $ = selector => document.querySelector(selector);
+
+    const itemsEl = $("#items"), openCountEl = $("#openCount"), doneCountEl = $("#doneCount");
+    const syncTimerEl = $("#syncTimer"), syncStatusEl = $("#syncStatus"), syncDotEl = $("#syncDot");
+    const addModal = $("#addModal"), archiveModal = $("#archiveModal"), addForm = $("#addForm"), itemInput = $("#itemInput");
+    const archiveListEl = $("#archiveList"), toastEl = $("#toast"), authModal = $("#authModal");
+    const authForm = $("#authForm"), authEmail = $("#authEmail"), authPassword = $("#authPassword");
+    const authTitle = $("#authTitle"), authText = $("#authText"), authSubmit = $("#authSubmit"), authSwitch = $("#authSwitch"), authSwitchText = $("#authSwitchText");
+    const openAuth = $("#openAuth"), userEmail = $("#userEmail");
+
+    let toastTimeout = null, data = loadLocalData(), currentUser = null, unsubscribe = null, authMode = "login";
+
+    function uid() { return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
+    function loadLocalData() { try { const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); return { items:Array.isArray(parsed.items)?parsed.items:[], archive:Array.isArray(parsed.archive)?parsed.archive:[] }; } catch { return {items:[],archive:[]}; } }
+    function saveLocalData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c])); }
+    function formatDuration(ms) { const total=Math.max(0,Math.floor(ms/1000)), h=Math.floor(total/3600), m=Math.floor((total%3600)/60), s=total%60; return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; }
+    function formatDate(timestamp) { return new Intl.DateTimeFormat("de-DE",{dateStyle:"short",timeStyle:"short"}).format(new Date(timestamp)); }
+    function showToast(message) { clearTimeout(toastTimeout); toastEl.textContent=message; toastEl.classList.add("show"); toastTimeout=setTimeout(()=>toastEl.classList.remove("show"),2200); }
+    function openModal(modal) { modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); }
+    function closeModal(modal) { modal.classList.remove("open"); modal.setAttribute("aria-hidden","true"); }
+
+    function normalizeState() {
+      const now = Date.now();
+      const expired = [];
+
+      data.items = data.items.filter(item => {
+        if (item.completedAt && now - item.completedAt >= COMPLETE_INTERVAL) {
+          expired.push({ ...item, archivedAt: now });
+          return false;
+        }
+        return true;
+      });
+
+      if (expired.length) {
+        data.archive = [...expired, ...data.archive];
+        saveData();
+      }
+
+      return expired.length;
+    }
+
+    function saveData() {
+      saveLocalData();
+      if (currentUser) pushToCloud();
+    }
+
+    async function pushToCloud() {
+      if (!db || !currentUser) return;
+
+      try {
+        setSync("speichert...", true);
+        await setDoc(
+          doc(db, "users", currentUser.uid),
+          {
+            items: data.items,
+            archive: data.archive,
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        );
+        setSync("synchronisiert", true);
+      } catch (error) {
+        console.error(error);
+        setSync("Fehler", false);
+        showToast("Synchronisierung fehlgeschlagen");
+      }
+    }
+
+    function setSync(status, online) {
+      syncStatusEl.textContent = status;
+      syncDotEl.style.background = online ? "var(--success)" : "var(--danger)";
+    }
+
+    function sortItems(items){ return { open:items.filter(i=>!i.completedAt).sort((a,b)=>a.createdAt-b.createdAt), completed:items.filter(i=>i.completedAt).sort((a,b)=>a.completedAt-b.completedAt) }; }
+    function render(){
+      normalizeState(); const {open,completed}=sortItems(data.items); openCountEl.textContent=`${open.length} offen`; doneCountEl.textContent=`${completed.length} erledigt`;
+      if(!open.length&&!completed.length){ itemsEl.innerHTML=`<div class="empty"><div class="empty-icon">🛒</div><p class="empty-title">Die Liste ist leer</p><p class="empty-text">Mit „Hinzufügen +“ kannst du den ersten Gegenstand eintragen.</p></div>`; return; }
+      const chunks=[]; if(open.length){chunks.push(`<div class="section-label"><span class="dot"></span>Offen</div>`,open.map(renderItem).join(""));} if(completed.length){chunks.push(`<div class="section-label completed"><span class="dot"></span>Erledigt · 24h</div>`,completed.map(renderItem).join(""));} itemsEl.innerHTML=chunks.join("");
+    }
+    function renderItem(item){ const completed=Boolean(item.completedAt); const timer=completed?`<div class="timer ${COMPLETE_INTERVAL-(Date.now()-item.completedAt)<=3600000?"soon":""}" data-complete-timer="${escapeHtml(item.id)}">${formatDuration(COMPLETE_INTERVAL-(Date.now()-item.completedAt))}</div>`:""; return `<div class="item ${completed?"completed":""}" data-id="${escapeHtml(item.id)}"><button class="check ${completed?"checked":""}" aria-label="${completed?"Als offen markieren":"Als erledigt markieren"}" data-action="toggle"></button><div class="item-name">${escapeHtml(item.name)}</div>${timer}</div>`; }
+    function renderArchive(){ normalizeState(); if(!data.archive.length){archiveListEl.innerHTML=`<div class="archive-empty">Noch nichts im Archiv. Die Liste war offenbar brav.</div>`;return;} archiveListEl.innerHTML=data.archive.map(item=>`<div class="archive-row"><div><div class="item-name">${escapeHtml(item.name)}</div><div class="archive-date">Archiviert: ${formatDate(item.archivedAt||item.completedAt||item.createdAt)}</div></div><button class="restore-btn" data-restore="${escapeHtml(item.id)}">Wiederherstellen</button></div>`).join(""); }
+
+    function addItem(name){ const clean=name.trim(); if(!clean)return; data.items.push({id:uid(),name:clean,createdAt:Date.now(),completedAt:null}); saveData(); render(); showToast("Gegenstand hinzugefügt"); }
+    function toggleItem(id){ const item=data.items.find(e=>e.id===id); if(!item)return; item.completedAt=item.completedAt?null:Date.now(); saveData(); render(); showToast(item.completedAt?"Erledigt. Der 24h-Timer läuft.":"Wieder auf offen gesetzt"); }
+    function restoreItem(id){ const index=data.archive.findIndex(e=>e.id===id); if(index===-1)return; const item=data.archive.splice(index,1)[0]; item.completedAt=null; item.archivedAt=null; item.createdAt=Date.now(); data.items.push(item); saveData(); renderArchive(); render(); showToast("Gegenstand wiederhergestellt"); }
+
+    async function startRealtimeSync(user) {
+      if (unsubscribe) unsubscribe();
+      if (!db) {
+        setSync("Firebase einrichten", false);
+        return;
+      }
+
+      setSync("verbinde...", true);
+
+      unsubscribe = onSnapshot(
+        doc(db, "users", user.uid),
+        async snapshot => {
+          const remote = snapshot.data();
+
+          if (remote && (Array.isArray(remote.items) || Array.isArray(remote.archive))) {
+            data = {
+              items: Array.isArray(remote.items) ? remote.items : [],
+              archive: Array.isArray(remote.archive) ? remote.archive : []
+            };
+            saveLocalData();
+            render();
+            renderArchive();
+          } else {
+            const local = loadLocalData();
+
+            if (local.items.length || local.archive.length) {
+              data = local;
+              await pushToCloud();
+            } else {
+              data = { items: [], archive: [] };
+              saveLocalData();
+              await pushToCloud();
+            }
+          }
+
+          setSync("synchronisiert", true);
+        },
+        error => {
+          console.error(error);
+          setSync("Fehler", false);
+
+          if (error.code === "permission-denied") {
+            showToast("Firebase-Regeln verweigern den Zugriff");
+          } else {
+            showToast("Verbindung zu Firebase fehlgeschlagen");
+          }
+        }
+      );
+    }
+
+    function updateAuthUI() {
+      if (currentUser) {
+        userEmail.textContent = currentUser.email || "";
+        openAuth.textContent = "Abmelden";
+        $("#openAdd").style.display = "inline-flex";
+      } else {
+        userEmail.textContent = "";
+        openAuth.textContent = "Anmelden";
+        $("#openAdd").style.display = "none";
+      }
+    }
+
+    function updateAuthMode() {
+      const login = authMode === "login";
+      authTitle.textContent = login ? "Anmelden" : "Konto erstellen";
+      authText.textContent = login
+        ? "Melde dich an, damit deine Einkaufsliste auf allen Geräten verfügbar ist."
+        : "Erstelle ein Konto für deine geräteübergreifende Einkaufsliste.";
+      authSubmit.textContent = login ? "Anmelden" : "Registrieren";
+      authSwitchText.textContent = login ? "Noch kein Konto?" : "Schon ein Konto?";
+      authSwitch.textContent = login ? "Registrieren" : "Anmelden";
+    }
+
+    $("#openAdd").addEventListener("click", () => {
+      openModal(addModal);
+      setTimeout(() => itemInput.focus(), 50);
+    });
+
+    $("#cancelAdd").addEventListener("click", () => {
+      closeModal(addModal);
+      itemInput.value = "";
+    });
+
+    addModal.addEventListener("click", e => {
+      if (e.target === addModal) {
+        closeModal(addModal);
+        itemInput.value = "";
+      }
+    });
+
+    addForm.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!itemInput.value.trim()) return;
+      addItem(itemInput.value);
+      itemInput.value = "";
+      closeModal(addModal);
+    });
+
+    itemsEl.addEventListener("click", e => {
+      const target = e.target.closest("[data-action='toggle']");
+      if (target) {
+        const item = target.closest(".item");
+        if (item) toggleItem(item.dataset.id);
+      }
+    });
+
+    $("#openArchive").addEventListener("click", () => {
+      renderArchive();
+      openModal(archiveModal);
+    });
+
+    $("#closeArchive").addEventListener("click", () => closeModal(archiveModal));
+
+    archiveModal.addEventListener("click", e => {
+      if (e.target === archiveModal) closeModal(archiveModal);
+    });
+
+    archiveListEl.addEventListener("click", e => {
+      const button = e.target.closest("[data-restore]");
+      if (button) restoreItem(button.dataset.restore);
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        closeModal(addModal);
+        closeModal(archiveModal);
+        closeModal(authModal);
+      }
+    });
+
+    $("#cancelAuth").addEventListener("click", () => closeModal(authModal));
+
+    authSwitch.addEventListener("click", () => {
+      authMode = authMode === "login" ? "register" : "login";
+      updateAuthMode();
+    });
+
+    openAuth.addEventListener("click", async () => {
+      if (currentUser) {
+        await signOut(auth);
+      } else {
+        authMode = "login";
+        updateAuthMode();
+        openModal(authModal);
+        setTimeout(() => authEmail.focus(), 50);
+      }
+    });
+
+    authForm.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      try {
+        setSync("Anmeldung...", true);
+
+        if (authMode === "login") {
+          await signInWithEmailAndPassword(
+            auth,
+            authEmail.value.trim(),
+            authPassword.value
+          );
+        } else {
+          await createUserWithEmailAndPassword(
+            auth,
+            authEmail.value.trim(),
+            authPassword.value
+          );
+        }
+
+        closeModal(authModal);
+        authForm.reset();
+        showToast("Anmeldung erfolgreich");
+      } catch (error) {
+        console.error(error);
+
+        const messages = {
+          "auth/invalid-credential": "E-Mail oder Passwort ist falsch.",
+          "auth/invalid-login-credentials": "E-Mail oder Passwort ist falsch.",
+          "auth/email-already-in-use": "Für diese E-Mail existiert bereits ein Konto.",
+          "auth/weak-password": "Das Passwort muss mindestens 6 Zeichen haben.",
+          "auth/invalid-email": "Bitte eine gültige E-Mail-Adresse eingeben.",
+          "auth/too-many-requests": "Zu viele Versuche. Bitte kurz warten."
+        };
+
+        showToast(messages[error.code] || "Anmeldung fehlgeschlagen");
+      }
+    });
+
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      updateAuthUI();
+
+      if (user) {
+        startRealtimeSync(user);
+      } else {
+        if (unsubscribe) unsubscribe();
+        unsubscribe = null;
+        setSync("nicht angemeldet", false);
+        data = loadLocalData();
+        render();
+        renderArchive();
+      }
+    });
+
+    function updateCompleteTimers(){ document.querySelectorAll("[data-complete-timer]").forEach(timer=>{const item=data.items.find(e=>e.id===timer.dataset.completeTimer);if(!item||!item.completedAt)return;const remaining=Math.max(0,COMPLETE_INTERVAL-(Date.now()-item.completedAt));timer.textContent=formatDuration(remaining);timer.classList.toggle("soon",remaining<=3600000);}); if(normalizeState()){render();renderArchive();} }
+
+    updateAuthUI();
+    render();
+    renderArchive();
+    setSync("nicht angemeldet", false);
+
+    setInterval(updateCompleteTimers, 1000);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        normalizeState();
+        render();
+        renderArchive();
+      }
+    });
+  </script>
+</body>
+</html>
