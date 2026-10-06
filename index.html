@@ -771,9 +771,29 @@
         transition-duration: .01ms !important;
       }
     }
+  
+    #jsError {
+      position: fixed;
+      left: 50%;
+      top: 16px;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: min(620px, calc(100% - 24px));
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #3a1717;
+      color: #fff;
+      box-shadow: 0 12px 35px rgba(0,0,0,.25);
+      font-size: 13px;
+      line-height: 1.45;
+      display: none;
+    }
+    #jsError.show { display: block; }
+
   </style>
 </head>
 <body>
+  <div id="jsError" role="alert"></div>
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
@@ -908,7 +928,7 @@
     // Firebase Console > Projekteinstellungen > Deine Apps > Web-App
     // Die folgenden Werte durch deine Firebase-Konfiguration ersetzen.
     const firebaseConfig = {
-      apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0Rzua9uqD_IzY",
+      apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0RzuaQ9uqD_IzY",
       authDomain: "einkaufsliste-3bd02.firebaseapp.com",
       projectId: "einkaufsliste-3bd02",
       storageBucket: "einkaufsliste-3bd02.firebasestorage.app",
@@ -1310,5 +1330,65 @@
       }
     });
   </script>
+
+  <script>
+    (function () {
+      const $ = (s) => document.querySelector(s);
+      const settings = $("#settingsModal");
+      const open = $("#openSettings");
+      const close = $("#closeSettings");
+      const toggle = $("#darkModeToggle");
+      const key = "shopping-list-theme-v1";
+
+      function applyTheme(theme) {
+        const dark = theme === "dark";
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        if (toggle) toggle.checked = dark;
+        localStorage.setItem(key, dark ? "dark" : "light");
+      }
+
+      if (settings && open && close && toggle) {
+        open.addEventListener("click", function () {
+          toggle.checked = localStorage.getItem(key) === "dark";
+          settings.classList.add("open");
+          settings.setAttribute("aria-hidden", "false");
+        });
+
+        close.addEventListener("click", function () {
+          settings.classList.remove("open");
+          settings.setAttribute("aria-hidden", "true");
+        });
+
+        settings.addEventListener("click", function (e) {
+          if (e.target === settings) {
+            settings.classList.remove("open");
+            settings.setAttribute("aria-hidden", "true");
+          }
+        });
+
+        toggle.addEventListener("change", function () {
+          applyTheme(toggle.checked ? "dark" : "light");
+        });
+
+        applyTheme(localStorage.getItem(key) === "dark" ? "dark" : "light");
+      }
+
+      window.addEventListener("error", function (e) {
+        const box = $("#jsError");
+        if (!box) return;
+        box.textContent = "JavaScript-Fehler: " + (e.message || "Unbekannter Fehler");
+        box.classList.add("show");
+      });
+
+      window.addEventListener("unhandledrejection", function (e) {
+        const box = $("#jsError");
+        if (!box) return;
+        const reason = e.reason && (e.reason.message || e.reason.code);
+        box.textContent = "JavaScript-Fehler: " + (reason || "Unbekannter Fehler");
+        box.classList.add("show");
+      });
+    })();
+  </script>
+
 </body>
 </html>
