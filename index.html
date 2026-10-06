@@ -240,6 +240,19 @@
       transform: rotate(-45deg) translateY(-1px);
     }
 
+    .item-author {
+      margin-bottom: 3px;
+      font-size: 10px;
+      line-height: 1.2;
+      color: var(--muted);
+      font-weight: 750;
+      letter-spacing: .02em;
+    }
+
+    .item-content {
+      min-width: 0;
+    }
+
     .item-name {
       min-width: 0;
       font-size: 15px;
@@ -563,7 +576,7 @@
 
     .account-actions { display:flex; align-items:center; gap:8px; }
     .user-email { max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--muted); }
-    .account-btn { padding:10px 13px; border-radius:12px; background:#eef2f7; color:var(--text); font-weight:750; }
+    .account-btn { padding:10px 13px; border-radius:12px; background:#eef2f7; color:var(--text); font-weight:750; white-space:nowrap; }
     .auth-modal .modal-actions { margin-top:12px; }
     .auth-switch { margin-top:12px; text-align:center; font-size:12px; color:var(--muted); }
     .auth-switch button { background:none; color:var(--accent); font-weight:750; padding:0; }
@@ -645,7 +658,11 @@
           <p class="brand-subtitle">Offene Dinge zuerst. Erledigte Dinge unten. Menschheit gerettet.</p>
         </div>
       </div>
-      <div class="account-actions"><span class="user-email" id="userEmail"></span><button class="account-btn" id="openAuth">Anmelden</button></div>
+      <div class="account-actions">
+        <span class="user-email" id="userEmail"></span>
+        <button class="account-btn" id="openDeviceName" type="button" hidden>Gerätename</button>
+        <button class="account-btn" id="openAuth" type="button">Anmelden</button>
+      </div>
     </header>
 
     <main class="main-card">
@@ -701,6 +718,22 @@
   </div>
 
 
+  <div class="modal-backdrop" id="deviceNameModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deviceNameTitle">
+      <h2 id="deviceNameTitle">Gerätename</h2>
+      <p>Dieser Name gilt nur auf diesem Gerät bzw. in diesem Browser. Andere Handys mit demselben Konto können einen eigenen Namen haben.</p>
+      <form id="deviceNameForm">
+        <div class="input-wrap">
+          <input class="item-input" id="deviceNameInput" maxlength="40" autocomplete="off" placeholder="z. B. Schmidtis Handy">
+        </div>
+        <div class="modal-actions">
+          <button class="secondary-btn" type="button" id="cancelDeviceName">Abbrechen</button>
+          <button class="primary-btn" type="submit">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="modal-backdrop auth-modal" id="authModal" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
       <h2 id="authTitle">Anmelden</h2>
@@ -743,6 +776,7 @@
 
     const COMPLETE_INTERVAL = 24 * 60 * 60 * 1000;
     const STORAGE_KEY = "shopping-list-v1";
+    const DEVICE_NAME_KEY = "shopping-list-device-name-v1";
     const $ = selector => document.querySelector(selector);
 
     const itemsEl = $("#items"), openCountEl = $("#openCount"), doneCountEl = $("#doneCount");
@@ -751,9 +785,21 @@
     const archiveListEl = $("#archiveList"), toastEl = $("#toast"), authModal = $("#authModal");
     const authForm = $("#authForm"), authEmail = $("#authEmail"), authPassword = $("#authPassword");
     const authTitle = $("#authTitle"), authText = $("#authText"), authSubmit = $("#authSubmit"), authSwitch = $("#authSwitch"), authSwitchText = $("#authSwitchText");
-    const openAuth = $("#openAuth"), userEmail = $("#userEmail");
+    const openAuth = $("#openAuth"), userEmail = $("#userEmail"), openDeviceName = $("#openDeviceName");
+    const deviceNameModal = $("#deviceNameModal"), deviceNameForm = $("#deviceNameForm"), deviceNameInput = $("#deviceNameInput"), cancelDeviceName = $("#cancelDeviceName");
 
     let toastTimeout = null, data = loadLocalData(), currentUser = null, unsubscribe = null, authMode = "login";
+
+    function getDeviceName() {
+      return localStorage.getItem(DEVICE_NAME_KEY) || "Dieses Gerät";
+    }
+
+    function setDeviceName(name) {
+      const clean = name.trim().replace(/\s+/g, " ").slice(0, 40);
+      localStorage.setItem(DEVICE_NAME_KEY, clean || "Dieses Gerät");
+      render();
+      showToast(`Gerätename: ${clean || "Dieses Gerät"}`);
+    }
 
     function uid() { return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
     function loadLocalData() { try { const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); return { items:Array.isArray(parsed.items)?parsed.items:[], archive:Array.isArray(parsed.archive)?parsed.archive:[] }; } catch { return {items:[],archive:[]}; } }
@@ -823,12 +869,12 @@
       if(!open.length&&!completed.length){ itemsEl.innerHTML=`<div class="empty"><div class="empty-icon">🛒</div><p class="empty-title">Die Liste ist leer</p><p class="empty-text">Mit „Hinzufügen +“ kannst du den ersten Gegenstand eintragen.</p></div>`; return; }
       const chunks=[]; if(open.length){chunks.push(`<div class="section-label"><span class="dot"></span>Offen</div>`,open.map(renderItem).join(""));} if(completed.length){chunks.push(`<div class="section-label completed"><span class="dot"></span>Erledigt · 24h</div>`,completed.map(renderItem).join(""));} itemsEl.innerHTML=chunks.join("");
     }
-    function renderItem(item){ const completed=Boolean(item.completedAt); const timer=completed?`<div class="timer ${COMPLETE_INTERVAL-(Date.now()-item.completedAt)<=3600000?"soon":""}" data-complete-timer="${escapeHtml(item.id)}">${formatDuration(COMPLETE_INTERVAL-(Date.now()-item.completedAt))}</div>`:""; return `<div class="item ${completed?"completed":""}" data-id="${escapeHtml(item.id)}"><button class="check ${completed?"checked":""}" aria-label="${completed?"Als offen markieren":"Als erledigt markieren"}" data-action="toggle"></button><div class="item-name">${escapeHtml(item.name)}</div>${timer}</div>`; }
+    function renderItem(item){ const completed=Boolean(item.completedAt); const timer=completed?`<div class="timer ${COMPLETE_INTERVAL-(Date.now()-item.completedAt)<=3600000?"soon":""}" data-complete-timer="${escapeHtml(item.id)}">${formatDuration(COMPLETE_INTERVAL-(Date.now()-item.completedAt))}</div>`:""; const author=item.addedBy||item.deviceName||"Dieses Gerät"; return `<div class="item ${completed?"completed":""}" data-id="${escapeHtml(item.id)}"><button class="check ${completed?"checked":""}" aria-label="${completed?"Als offen markieren":"Als erledigt markieren"}" data-action="toggle"></button><div class="item-content"><div class="item-author">${escapeHtml(author)}</div><div class="item-name">${escapeHtml(item.name)}</div></div>${timer}</div>`; }
     function renderArchive(){ normalizeState(); if(!data.archive.length){archiveListEl.innerHTML=`<div class="archive-empty">Noch nichts im Archiv. Die Liste war offenbar brav.</div>`;return;} archiveListEl.innerHTML=data.archive.map(item=>`<div class="archive-row"><div><div class="item-name">${escapeHtml(item.name)}</div><div class="archive-date">Archiviert: ${formatDate(item.archivedAt||item.completedAt||item.createdAt)}</div></div><button class="restore-btn" data-restore="${escapeHtml(item.id)}">Wiederherstellen</button></div>`).join(""); }
 
-    function addItem(name){ const clean=name.trim(); if(!clean)return; data.items.push({id:uid(),name:clean,createdAt:Date.now(),completedAt:null}); saveData(); render(); showToast("Gegenstand hinzugefügt"); }
+    function addItem(name){ const clean=name.trim(); if(!clean)return; data.items.push({id:uid(),name:clean,createdAt:Date.now(),completedAt:null,addedBy:getDeviceName()}); saveData(); render(); showToast("Gegenstand hinzugefügt"); }
     function toggleItem(id){ const item=data.items.find(e=>e.id===id); if(!item)return; item.completedAt=item.completedAt?null:Date.now(); saveData(); render(); showToast(item.completedAt?"Erledigt. Der 24h-Timer läuft.":"Wieder auf offen gesetzt"); }
-    function restoreItem(id){ const index=data.archive.findIndex(e=>e.id===id); if(index===-1)return; const item=data.archive.splice(index,1)[0]; item.completedAt=null; item.archivedAt=null; item.createdAt=Date.now(); data.items.push(item); saveData(); renderArchive(); render(); showToast("Gegenstand wiederhergestellt"); }
+    function restoreItem(id){ const index=data.archive.findIndex(e=>e.id===id); if(index===-1)return; const item=data.archive.splice(index,1)[0]; item.completedAt=null; item.archivedAt=null; item.createdAt=Date.now(); item.addedBy=item.addedBy||getDeviceName(); data.items.push(item); saveData(); renderArchive(); render(); showToast("Gegenstand wiederhergestellt"); }
 
     async function startRealtimeSync(user) {
       if (unsubscribe) unsubscribe();
@@ -883,10 +929,13 @@
     function updateAuthUI() {
       if (currentUser) {
         userEmail.textContent = currentUser.email || "";
+        openDeviceName.hidden = false;
+        openDeviceName.textContent = getDeviceName();
         openAuth.textContent = "Abmelden";
         $("#openAdd").style.display = "inline-flex";
       } else {
         userEmail.textContent = "";
+        openDeviceName.hidden = true;
         openAuth.textContent = "Anmelden";
         $("#openAdd").style.display = "none";
       }
@@ -957,7 +1006,27 @@
         closeModal(addModal);
         closeModal(archiveModal);
         closeModal(authModal);
+        closeModal(deviceNameModal);
       }
+    });
+
+    openDeviceName.addEventListener("click", () => {
+      deviceNameInput.value = getDeviceName();
+      openModal(deviceNameModal);
+      setTimeout(() => { deviceNameInput.focus(); deviceNameInput.select(); }, 50);
+    });
+
+    cancelDeviceName.addEventListener("click", () => closeModal(deviceNameModal));
+
+    deviceNameModal.addEventListener("click", e => {
+      if (e.target === deviceNameModal) closeModal(deviceNameModal);
+    });
+
+    deviceNameForm.addEventListener("submit", e => {
+      e.preventDefault();
+      setDeviceName(deviceNameInput.value);
+      openDeviceName.textContent = getDeviceName();
+      closeModal(deviceNameModal);
     });
 
     $("#cancelAuth").addEventListener("click", () => closeModal(authModal));
