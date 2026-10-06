@@ -581,6 +581,125 @@
     .auth-switch { margin-top:12px; text-align:center; font-size:12px; color:var(--muted); }
     .auth-switch button { background:none; color:var(--accent); font-weight:750; padding:0; }
 
+
+    html[data-theme="dark"] {
+      --bg: #101214;
+      --surface: rgba(27,30,34,.92);
+      --surface-strong: #1b1e22;
+      --text: #f1f3f5;
+      --muted: #a3aab2;
+      --line: #30353b;
+      --accent: #7da7ff;
+      --accent-soft: #1b2a45;
+      --success: #68b880;
+      --success-soft: #17311f;
+      --danger: #e37a7a;
+      --shadow: 0 16px 50px rgba(0,0,0,.35);
+      --shadow-small: 0 6px 22px rgba(0,0,0,.28);
+    }
+    html[data-theme="dark"] body {
+      background:
+        radial-gradient(circle at top left, rgba(125,167,255,.08), transparent 30%),
+        linear-gradient(180deg, #15181b 0%, #101214 100%);
+    }
+    html[data-theme="dark"] .main-card,
+    html[data-theme="dark"] .modal,
+    html[data-theme="dark"] .archive-panel {
+      background: var(--surface-strong);
+      border-color: var(--line);
+    }
+    html[data-theme="dark"] .item:hover {
+      background: rgba(255,255,255,.04);
+      border-color: var(--line);
+    }
+    html[data-theme="dark"] .item.completed { background: rgba(255,255,255,.025); }
+    html[data-theme="dark"] .pill,
+    html[data-theme="dark"] .account-btn,
+    html[data-theme="dark"] .secondary-btn,
+    html[data-theme="dark"] .empty-icon {
+      background: #252a30;
+      color: var(--text);
+    }
+    html[data-theme="dark"] .check,
+    html[data-theme="dark"] .item-input {
+      background: #171a1e;
+      color: var(--text);
+      border-color: #3a4149;
+    }
+    html[data-theme="dark"] .modal-backdrop { background: rgba(0,0,0,.56); }
+    html[data-theme="dark"] .sync-card,
+    html[data-theme="dark"] .archive-btn {
+      background: rgba(27,30,34,.96);
+      border-color: var(--line);
+      color: var(--text);
+    }
+    html[data-theme="dark"] .auth-error {
+      background: #351d1d;
+      border-color: #633131;
+      color: #ffb1b1;
+    }
+
+    .settings-modal .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 13px 0;
+      border-top: 1px solid var(--line);
+    }
+    .settings-copy { min-width: 0; }
+    .settings-title { font-size: 14px; font-weight: 800; }
+    .settings-description {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .switch {
+      position: relative;
+      width: 46px;
+      height: 27px;
+      flex: 0 0 auto;
+    }
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #c9ced5;
+      transition: background .18s ease;
+    }
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      width: 21px;
+      height: 21px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,.18);
+      transition: transform .18s ease;
+    }
+    .switch input:checked + .switch-track { background: var(--accent); }
+    .switch input:checked + .switch-track::after { transform: translateX(19px); }
+    .auth-error {
+      display: none;
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #efcaca;
+      border-radius: 11px;
+      background: #fff3f3;
+      color: #a53a3a;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .auth-error.show { display: block; }
+
     @media (max-width: 640px) {
       .app-shell {
         width: min(100% - 18px, 1040px);
@@ -589,6 +708,12 @@
 
       .topbar {
         margin-bottom: 15px;
+        align-items: flex-start;
+      }
+
+      .account-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .brand-subtitle {
@@ -661,6 +786,7 @@
       <div class="account-actions">
         <span class="user-email" id="userEmail"></span>
         <button class="account-btn" id="openDeviceName" type="button" hidden>Gerätename</button>
+        <button class="account-btn" id="openSettings" type="button">Einstellungen</button>
         <button class="account-btn" id="openAuth" type="button">Anmelden</button>
       </div>
     </header>
@@ -734,6 +860,27 @@
     </div>
   </div>
 
+
+  <div class="modal-backdrop settings-modal" id="settingsModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">Einstellungen</h2>
+      <p>Diese Einstellungen gelten nur für dieses Gerät bzw. diesen Browser.</p>
+      <div class="settings-row">
+        <div class="settings-copy">
+          <div class="settings-title">Dark Mode</div>
+          <div class="settings-description">Dunkles Erscheinungsbild einschalten.</div>
+        </div>
+        <label class="switch" aria-label="Dark Mode">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="switch-track"></span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="primary-btn" type="button" id="closeSettings">Fertig</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop auth-modal" id="authModal" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
       <h2 id="authTitle">Anmelden</h2>
@@ -747,6 +894,7 @@
         </div>
       </form>
       <div class="auth-switch"><span id="authSwitchText">Noch kein Konto?</span> <button type="button" id="authSwitch">Registrieren</button></div>
+      <div class="auth-error" id="authError" role="alert"></div>
     </div>
   </div>
 
@@ -777,6 +925,7 @@
     const COMPLETE_INTERVAL = 24 * 60 * 60 * 1000;
     const STORAGE_KEY = "shopping-list-v1";
     const DEVICE_NAME_KEY = "shopping-list-device-name-v1";
+    const THEME_KEY = "shopping-list-theme-v1";
     const $ = selector => document.querySelector(selector);
 
     const itemsEl = $("#items"), openCountEl = $("#openCount"), doneCountEl = $("#doneCount");
@@ -785,8 +934,9 @@
     const archiveListEl = $("#archiveList"), toastEl = $("#toast"), authModal = $("#authModal");
     const authForm = $("#authForm"), authEmail = $("#authEmail"), authPassword = $("#authPassword");
     const authTitle = $("#authTitle"), authText = $("#authText"), authSubmit = $("#authSubmit"), authSwitch = $("#authSwitch"), authSwitchText = $("#authSwitchText");
-    const openAuth = $("#openAuth"), userEmail = $("#userEmail"), openDeviceName = $("#openDeviceName");
+    const openAuth = $("#openAuth"), userEmail = $("#userEmail"), openDeviceName = $("#openDeviceName"), openSettings = $("#openSettings");
     const deviceNameModal = $("#deviceNameModal"), deviceNameForm = $("#deviceNameForm"), deviceNameInput = $("#deviceNameInput"), cancelDeviceName = $("#cancelDeviceName");
+    const settingsModal = $("#settingsModal"), darkModeToggle = $("#darkModeToggle"), closeSettings = $("#closeSettings"), authError = $("#authError");
 
     let toastTimeout = null, data = loadLocalData(), currentUser = null, unsubscribe = null, authMode = "login";
 
@@ -799,6 +949,18 @@
       localStorage.setItem(DEVICE_NAME_KEY, clean || "Dieses Gerät");
       render();
       showToast(`Gerätename: ${clean || "Dieses Gerät"}`);
+    }
+
+
+    function getTheme() {
+      return localStorage.getItem(THEME_KEY) === "dark" ? "dark" : "light";
+    }
+
+    function applyTheme(theme) {
+      const dark = theme === "dark";
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      darkModeToggle.checked = dark;
+      localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
     }
 
     function uid() { return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
@@ -1007,6 +1169,7 @@
         closeModal(archiveModal);
         closeModal(authModal);
         closeModal(deviceNameModal);
+        closeModal(settingsModal);
       }
     });
 
@@ -1029,10 +1192,24 @@
       closeModal(deviceNameModal);
     });
 
+
+    openSettings.addEventListener("click", () => openModal(settingsModal));
+    closeSettings.addEventListener("click", () => closeModal(settingsModal));
+
+    settingsModal.addEventListener("click", e => {
+      if (e.target === settingsModal) closeModal(settingsModal);
+    });
+
+    darkModeToggle.addEventListener("change", () => {
+      applyTheme(darkModeToggle.checked ? "dark" : "light");
+    });
+
     $("#cancelAuth").addEventListener("click", () => closeModal(authModal));
 
     authSwitch.addEventListener("click", () => {
       authMode = authMode === "login" ? "register" : "login";
+      authError.textContent = "";
+      authError.classList.remove("show");
       updateAuthMode();
     });
 
@@ -1041,6 +1218,8 @@
         await signOut(auth);
       } else {
         authMode = "login";
+        authError.textContent = "";
+        authError.classList.remove("show");
         updateAuthMode();
         openModal(authModal);
         setTimeout(() => authEmail.focus(), 50);
@@ -1076,13 +1255,22 @@
         const messages = {
           "auth/invalid-credential": "E-Mail oder Passwort ist falsch.",
           "auth/invalid-login-credentials": "E-Mail oder Passwort ist falsch.",
+          "auth/user-not-found": "Für diese E-Mail-Adresse gibt es noch kein Konto.",
+          "auth/wrong-password": "E-Mail oder Passwort ist falsch.",
           "auth/email-already-in-use": "Für diese E-Mail existiert bereits ein Konto.",
           "auth/weak-password": "Das Passwort muss mindestens 6 Zeichen haben.",
           "auth/invalid-email": "Bitte eine gültige E-Mail-Adresse eingeben.",
-          "auth/too-many-requests": "Zu viele Versuche. Bitte kurz warten."
+          "auth/too-many-requests": "Zu viele Versuche. Bitte kurz warten.",
+          "auth/operation-not-allowed": "E-Mail/Passwort ist in Firebase nicht aktiviert. Aktiviere es unter Authentication → Sign-in method → E-Mail/Passwort.",
+          "auth/unauthorized-domain": "Diese Website ist in Firebase noch nicht als autorisierte Domain eingetragen. Bei GitHub Pages muss deine github.io-Domain unter Authentication → Settings → Authorized domains stehen.",
+          "auth/network-request-failed": "Netzwerkfehler. Prüfe deine Internetverbindung.",
+          "auth/configuration-not-found": "Die Firebase-Authentifizierung ist nicht korrekt eingerichtet."
         };
 
-        showToast(messages[error.code] || "Anmeldung fehlgeschlagen");
+        const message = messages[error.code] || `Anmeldung fehlgeschlagen (${error.code || "unbekannter Fehler"}).`;
+        authError.textContent = message;
+        authError.classList.add("show");
+        showToast(message);
       }
     });
 
@@ -1096,6 +1284,8 @@
         if (unsubscribe) unsubscribe();
         unsubscribe = null;
         setSync("nicht angemeldet", false);
+        authError.textContent = "";
+        authError.classList.remove("show");
         data = loadLocalData();
         render();
         renderArchive();
@@ -1104,6 +1294,7 @@
 
     function updateCompleteTimers(){ document.querySelectorAll("[data-complete-timer]").forEach(timer=>{const item=data.items.find(e=>e.id===timer.dataset.completeTimer);if(!item||!item.completedAt)return;const remaining=Math.max(0,COMPLETE_INTERVAL-(Date.now()-item.completedAt));timer.textContent=formatDuration(remaining);timer.classList.toggle("soon",remaining<=3600000);}); if(normalizeState()){render();renderArchive();} }
 
+    applyTheme(getTheme());
     updateAuthUI();
     render();
     renderArchive();
