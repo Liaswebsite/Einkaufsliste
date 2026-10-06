@@ -772,62 +772,18 @@
       }
     }
   
-    #jsError {
-      position: fixed;
-      left: 50%;
-      top: 16px;
-      transform: translateX(-50%);
-      z-index: 1000;
-      width: min(620px, calc(100% - 24px));
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #3a1717;
-      color: #fff;
-      box-shadow: 0 12px 35px rgba(0,0,0,.25);
-      font-size: 13px;
-      line-height: 1.45;
-      display: none;
-    }
-    #jsError.show { display: block; }
-
-  
-    html[data-theme="dark"] .settings-actions button,
-    html[data-theme="dark"] #closeSettings,
-    html[data-theme="dark"] .modal-actions .secondary-btn,
-    html[data-theme="dark"] .modal-actions .cancel-btn {
-      background: #252525 !important;
-      color: #f2f2f2 !important;
-      border-color: #444 !important;
-    }
-    html[data-theme="dark"] .settings-actions .primary-btn,
-    html[data-theme="dark"] #closeSettings.primary-btn {
-      background: #3b82f6 !important;
-      color: #fff !important;
-      border-color: #3b82f6 !important;
-    }
-    html[data-theme="dark"] .back-button,
-html[data-theme="dark"] .back-button svg,
-html[data-theme="dark"] .back-button path,
-html[data-theme="dark"] .header-back,
-html[data-theme="dark"] .header-back svg,
-html[data-theme="dark"] .header-back path {
-  color: #000 !important;
-  stroke: #000 !important;
-  fill: none !important;
+html[data-theme="dark"] #closeArchive {
+  background: #3b82f6 !important;
+  color: #fff !important;
+  border-color: #3b82f6 !important;
 }
-    html[data-theme="dark"] .settings-modal,
-    html[data-theme="dark"] .modal,
-    html[data-theme="dark"] .modal-content {
-      background: #171717 !important;
-      color: #f2f2f2 !important;
-      border-color: #333 !important;
-    }
-    html[data-theme="dark"] body { background:#0f0f0f !important; color:#f2f2f2 !important; }
-
-  </style>
+html[data-theme="dark"] #closeArchive:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+}
+</style>
 </head>
 <body>
-  <div id="jsError" role="alert"></div>
   <div class="app-shell">
     <header class="topbar">
       <div class="brand">
@@ -867,7 +823,6 @@ html[data-theme="dark"] .header-back path {
         </div>
         <span class="sync-status" id="syncStatus">bereit</span>
       </div>
-      <button class="archive-btn" id="openAdd" type="button">Hinzufügen +</button>
       <button class="archive-btn" id="openArchive">Archiv</button>
     </div>
   </div>
@@ -963,7 +918,7 @@ html[data-theme="dark"] .header-back path {
     // Firebase Console > Projekteinstellungen > Deine Apps > Web-App
     // Die folgenden Werte durch deine Firebase-Konfiguration ersetzen.
     const firebaseConfig = {
-      apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0RzuaQ9uqD_IzY",
+      apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0Rzua9uqD_IzY",
       authDomain: "einkaufsliste-3bd02.firebaseapp.com",
       projectId: "einkaufsliste-3bd02",
       storageBucket: "einkaufsliste-3bd02.firebasestorage.app",
@@ -1014,7 +969,7 @@ html[data-theme="dark"] .header-back path {
     function applyTheme(theme) {
       const dark = theme === "dark";
       document.documentElement.dataset.theme = dark ? "dark" : "light";
-      if (darkModeToggle) darkModeToggle.checked = dark;
+      darkModeToggle.checked = dark;
       localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
     }
 
@@ -1169,24 +1124,24 @@ html[data-theme="dark"] .header-back path {
       authSwitch.textContent = login ? "Registrieren" : "Anmelden";
     }
 
-    $("#openAdd")?.addEventListener("click", () => {
+    $("#openAdd").addEventListener("click", () => {
       openModal(addModal);
       setTimeout(() => itemInput.focus(), 50);
     });
 
-    $("#cancelAdd")?.addEventListener("click", () => {
+    $("#cancelAdd").addEventListener("click", () => {
       closeModal(addModal);
       itemInput.value = "";
     });
 
-    addModal?.addEventListener("click", e => {
+    addModal.addEventListener("click", e => {
       if (e.target === addModal) {
         closeModal(addModal);
         itemInput.value = "";
       }
     });
 
-    addForm?.addEventListener("submit", e => {
+    addForm.addEventListener("submit", e => {
       e.preventDefault();
       if (!itemInput.value.trim()) return;
       addItem(itemInput.value);
@@ -1194,7 +1149,7 @@ html[data-theme="dark"] .header-back path {
       closeModal(addModal);
     });
 
-    itemsEl?.addEventListener("click", e => {
+    itemsEl.addEventListener("click", e => {
       const target = e.target.closest("[data-action='toggle']");
       if (target) {
         const item = target.closest(".item");
@@ -1202,18 +1157,18 @@ html[data-theme="dark"] .header-back path {
       }
     });
 
-    $("#openArchive")?.addEventListener("click", () => {
+    $("#openArchive").addEventListener("click", () => {
       renderArchive();
       openModal(archiveModal);
     });
 
-    $("#closeArchive")?.addEventListener("click", () => closeModal(archiveModal));
+    $("#closeArchive").addEventListener("click", () => closeModal(archiveModal));
 
-    archiveModal?.addEventListener("click", e => {
+    archiveModal.addEventListener("click", e => {
       if (e.target === archiveModal) closeModal(archiveModal);
     });
 
-    archiveListEl?.addEventListener("click", e => {
+    archiveListEl.addEventListener("click", e => {
       const button = e.target.closest("[data-restore]");
       if (button) restoreItem(button.dataset.restore);
     });
@@ -1228,19 +1183,19 @@ html[data-theme="dark"] .header-back path {
       }
     });
 
-    openDeviceName?.addEventListener("click", () => {
+    openDeviceName.addEventListener("click", () => {
       deviceNameInput.value = getDeviceName();
       openModal(deviceNameModal);
       setTimeout(() => { deviceNameInput.focus(); deviceNameInput.select(); }, 50);
     });
 
-    cancelDeviceName?.addEventListener("click", () => closeModal(deviceNameModal));
+    cancelDeviceName.addEventListener("click", () => closeModal(deviceNameModal));
 
-    deviceNameModal?.addEventListener("click", e => {
+    deviceNameModal.addEventListener("click", e => {
       if (e.target === deviceNameModal) closeModal(deviceNameModal);
     });
 
-    deviceNameForm?.addEventListener("submit", e => {
+    deviceNameForm.addEventListener("submit", e => {
       e.preventDefault();
       setDeviceName(deviceNameInput.value);
       openDeviceName.textContent = getDeviceName();
@@ -1248,27 +1203,27 @@ html[data-theme="dark"] .header-back path {
     });
 
 
-    openSettings?.addEventListener("click", () => openModal(settingsModal));
-    closeSettings?.addEventListener("click", () => closeModal(settingsModal));
+    openSettings.addEventListener("click", () => openModal(settingsModal));
+    closeSettings.addEventListener("click", () => closeModal(settingsModal));
 
-    settingsModal?.addEventListener("click", e => {
+    settingsModal.addEventListener("click", e => {
       if (e.target === settingsModal) closeModal(settingsModal);
     });
 
-    darkModeToggle?.addEventListener("change", () => {
+    darkModeToggle.addEventListener("change", () => {
       applyTheme(darkModeToggle.checked ? "dark" : "light");
     });
 
-    $("#cancelAuth")?.addEventListener("click", () => closeModal(authModal));
+    $("#cancelAuth").addEventListener("click", () => closeModal(authModal));
 
-    authSwitch?.addEventListener("click", () => {
+    authSwitch.addEventListener("click", () => {
       authMode = authMode === "login" ? "register" : "login";
       authError.textContent = "";
       authError.classList.remove("show");
       updateAuthMode();
     });
 
-    openAuth?.addEventListener("click", async () => {
+    openAuth.addEventListener("click", async () => {
       if (currentUser) {
         await signOut(auth);
       } else {
@@ -1281,7 +1236,7 @@ html[data-theme="dark"] .header-back path {
       }
     });
 
-    authForm?.addEventListener("submit", async e => {
+    authForm.addEventListener("submit", async e => {
       e.preventDefault();
 
       try {
@@ -1365,8 +1320,5 @@ html[data-theme="dark"] .header-back path {
       }
     });
   </script>
-
-
-
 </body>
 </html>
