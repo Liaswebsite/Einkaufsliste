@@ -771,16 +771,11 @@
         transition-duration: .01ms !important;
       }
     }
-  
-html[data-theme="dark"] #closeArchive {
-  background: #3b82f6 !important;
-  color: #fff !important;
-  border-color: #3b82f6 !important;
-}
-html[data-theme="dark"] #closeArchive:hover {
-  background: #2563eb !important;
-  border-color: #2563eb !important;
-}
+  </style>
+
+<style>
+html[data-theme="dark"] #closeArchive { background:#3b82f6 !important; color:#fff !important; border-color:#3b82f6 !important; }
+html[data-theme="dark"] #closeArchive:hover { background:#2563eb !important; border-color:#2563eb !important; }
 </style>
 </head>
 <body>
@@ -1320,5 +1315,18 @@ html[data-theme="dark"] #closeArchive:hover {
       }
     });
   </script>
+
+<script>
+(function(){
+  const q=s=>document.querySelector(s);
+  const open=m=>{if(m){m.classList.add('open');m.setAttribute('aria-hidden','false');}};
+  const close=m=>{if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');}};
+  const pairs=[['#openAdd','#addModal'],['#openArchive','#archiveModal'],['#openSettings','#settingsModal'],['#openAuth','#authModal'],['#openDeviceName','#deviceNameModal']];
+  pairs.forEach(([b,m])=>{const btn=q(b), modal=q(m); if(btn&&modal) btn.addEventListener('click',()=>open(modal));});
+  [['#cancelAdd','#addModal'],['#closeArchive','#archiveModal'],['#closeSettings','#settingsModal'],['#cancelAuth','#authModal'],['#cancelDeviceName','#deviceNameModal']].forEach(([b,m])=>{const btn=q(b),modal=q(m);if(btn&&modal)btn.addEventListener('click',()=>close(modal));});
+  document.querySelectorAll('.modal-backdrop').forEach(modal=>modal.addEventListener('click',e=>{if(e.target===modal)close(modal);}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-backdrop.open').forEach(close);});
+})();
+</script>
 </body>
 </html>
