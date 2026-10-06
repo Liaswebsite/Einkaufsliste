@@ -833,6 +833,7 @@
         </div>
         <span class="sync-status" id="syncStatus">bereit</span>
       </div>
+      <button class="archive-btn" id="openAdd" type="button">Hinzufügen +</button>
       <button class="archive-btn" id="openArchive">Archiv</button>
     </div>
   </div>
@@ -979,7 +980,7 @@
     function applyTheme(theme) {
       const dark = theme === "dark";
       document.documentElement.dataset.theme = dark ? "dark" : "light";
-      darkModeToggle.checked = dark;
+      if (darkModeToggle) darkModeToggle.checked = dark;
       localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
     }
 
@@ -1134,24 +1135,24 @@
       authSwitch.textContent = login ? "Registrieren" : "Anmelden";
     }
 
-    $("#openAdd").addEventListener("click", () => {
+    $("#openAdd")?.addEventListener("click", () => {
       openModal(addModal);
       setTimeout(() => itemInput.focus(), 50);
     });
 
-    $("#cancelAdd").addEventListener("click", () => {
+    $("#cancelAdd")?.addEventListener("click", () => {
       closeModal(addModal);
       itemInput.value = "";
     });
 
-    addModal.addEventListener("click", e => {
+    addModal?.addEventListener("click", e => {
       if (e.target === addModal) {
         closeModal(addModal);
         itemInput.value = "";
       }
     });
 
-    addForm.addEventListener("submit", e => {
+    addForm?.addEventListener("submit", e => {
       e.preventDefault();
       if (!itemInput.value.trim()) return;
       addItem(itemInput.value);
@@ -1159,7 +1160,7 @@
       closeModal(addModal);
     });
 
-    itemsEl.addEventListener("click", e => {
+    itemsEl?.addEventListener("click", e => {
       const target = e.target.closest("[data-action='toggle']");
       if (target) {
         const item = target.closest(".item");
@@ -1167,18 +1168,18 @@
       }
     });
 
-    $("#openArchive").addEventListener("click", () => {
+    $("#openArchive")?.addEventListener("click", () => {
       renderArchive();
       openModal(archiveModal);
     });
 
-    $("#closeArchive").addEventListener("click", () => closeModal(archiveModal));
+    $("#closeArchive")?.addEventListener("click", () => closeModal(archiveModal));
 
-    archiveModal.addEventListener("click", e => {
+    archiveModal?.addEventListener("click", e => {
       if (e.target === archiveModal) closeModal(archiveModal);
     });
 
-    archiveListEl.addEventListener("click", e => {
+    archiveListEl?.addEventListener("click", e => {
       const button = e.target.closest("[data-restore]");
       if (button) restoreItem(button.dataset.restore);
     });
@@ -1193,19 +1194,19 @@
       }
     });
 
-    openDeviceName.addEventListener("click", () => {
+    openDeviceName?.addEventListener("click", () => {
       deviceNameInput.value = getDeviceName();
       openModal(deviceNameModal);
       setTimeout(() => { deviceNameInput.focus(); deviceNameInput.select(); }, 50);
     });
 
-    cancelDeviceName.addEventListener("click", () => closeModal(deviceNameModal));
+    cancelDeviceName?.addEventListener("click", () => closeModal(deviceNameModal));
 
-    deviceNameModal.addEventListener("click", e => {
+    deviceNameModal?.addEventListener("click", e => {
       if (e.target === deviceNameModal) closeModal(deviceNameModal);
     });
 
-    deviceNameForm.addEventListener("submit", e => {
+    deviceNameForm?.addEventListener("submit", e => {
       e.preventDefault();
       setDeviceName(deviceNameInput.value);
       openDeviceName.textContent = getDeviceName();
@@ -1213,27 +1214,27 @@
     });
 
 
-    openSettings.addEventListener("click", () => openModal(settingsModal));
-    closeSettings.addEventListener("click", () => closeModal(settingsModal));
+    openSettings?.addEventListener("click", () => openModal(settingsModal));
+    closeSettings?.addEventListener("click", () => closeModal(settingsModal));
 
-    settingsModal.addEventListener("click", e => {
+    settingsModal?.addEventListener("click", e => {
       if (e.target === settingsModal) closeModal(settingsModal);
     });
 
-    darkModeToggle.addEventListener("change", () => {
+    darkModeToggle?.addEventListener("change", () => {
       applyTheme(darkModeToggle.checked ? "dark" : "light");
     });
 
-    $("#cancelAuth").addEventListener("click", () => closeModal(authModal));
+    $("#cancelAuth")?.addEventListener("click", () => closeModal(authModal));
 
-    authSwitch.addEventListener("click", () => {
+    authSwitch?.addEventListener("click", () => {
       authMode = authMode === "login" ? "register" : "login";
       authError.textContent = "";
       authError.classList.remove("show");
       updateAuthMode();
     });
 
-    openAuth.addEventListener("click", async () => {
+    openAuth?.addEventListener("click", async () => {
       if (currentUser) {
         await signOut(auth);
       } else {
@@ -1246,7 +1247,7 @@
       }
     });
 
-    authForm.addEventListener("submit", async e => {
+    authForm?.addEventListener("submit", async e => {
       e.preventDefault();
 
       try {
@@ -1331,64 +1332,7 @@
     });
   </script>
 
-  <script>
-    (function () {
-      const $ = (s) => document.querySelector(s);
-      const settings = $("#settingsModal");
-      const open = $("#openSettings");
-      const close = $("#closeSettings");
-      const toggle = $("#darkModeToggle");
-      const key = "shopping-list-theme-v1";
 
-      function applyTheme(theme) {
-        const dark = theme === "dark";
-        document.documentElement.dataset.theme = dark ? "dark" : "light";
-        if (toggle) toggle.checked = dark;
-        localStorage.setItem(key, dark ? "dark" : "light");
-      }
-
-      if (settings && open && close && toggle) {
-        open.addEventListener("click", function () {
-          toggle.checked = localStorage.getItem(key) === "dark";
-          settings.classList.add("open");
-          settings.setAttribute("aria-hidden", "false");
-        });
-
-        close.addEventListener("click", function () {
-          settings.classList.remove("open");
-          settings.setAttribute("aria-hidden", "true");
-        });
-
-        settings.addEventListener("click", function (e) {
-          if (e.target === settings) {
-            settings.classList.remove("open");
-            settings.setAttribute("aria-hidden", "true");
-          }
-        });
-
-        toggle.addEventListener("change", function () {
-          applyTheme(toggle.checked ? "dark" : "light");
-        });
-
-        applyTheme(localStorage.getItem(key) === "dark" ? "dark" : "light");
-      }
-
-      window.addEventListener("error", function (e) {
-        const box = $("#jsError");
-        if (!box) return;
-        box.textContent = "JavaScript-Fehler: " + (e.message || "Unbekannter Fehler");
-        box.classList.add("show");
-      });
-
-      window.addEventListener("unhandledrejection", function (e) {
-        const box = $("#jsError");
-        if (!box) return;
-        const reason = e.reason && (e.reason.message || e.reason.code);
-        box.textContent = "JavaScript-Fehler: " + (reason || "Unbekannter Fehler");
-        box.classList.add("show");
-      });
-    })();
-  </script>
 
 </body>
 </html>
