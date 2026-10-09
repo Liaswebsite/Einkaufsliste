@@ -102,6 +102,7 @@
     .add-btn {
       display: inline-flex;
       align-items: center;
+      pointer-events: auto;
       gap: 8px;
       padding: 12px 16px;
       border-radius: 13px;
@@ -639,16 +640,30 @@
       color: #ffb1b1;
     }
 
-    html[data-theme="dark"] .auth-modal .primary-btn,
+    /* In dark mode all main actions need a contrasting blue background. */
+    html[data-theme="dark"] .primary-btn,
+    html[data-theme="dark"] .add-btn,
     html[data-theme="dark"] .auth-modal #authSwitch {
       background: #3b82f6;
       border-color: #3b82f6;
       color: #fff;
     }
-    html[data-theme="dark"] .auth-modal #authSwitch:hover,
-    html[data-theme="dark"] .auth-modal .primary-btn:hover {
+    html[data-theme="dark"] .primary-btn:hover,
+    html[data-theme="dark"] .add-btn:hover,
+    html[data-theme="dark"] .auth-modal #authSwitch:hover {
       background: #2563eb;
       border-color: #2563eb;
+      color: #fff;
+    }
+    html[data-theme="dark"] .restore-btn {
+      background: #1b2a45;
+      color: #a9c5ff;
+    }
+    html[data-theme="dark"] .archive-row:hover {
+      background: rgba(255,255,255,.055);
+    }
+    html[data-theme="dark"] .completed .item-name {
+      color: var(--muted);
     }
     html[data-theme="dark"] .brand-mark {
       color: #3b82f6;
@@ -942,16 +957,17 @@
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-
+    // Firebase Console > Projekteinstellungen > Deine Apps > Web-App
+    // Die folgenden Werte durch deine Firebase-Konfiguration ersetzen.
     const firebaseConfig = {
-  apiKey: "AIzaSyDsGRrJTkdICxfeyG-Ux0RzuaQ9uqD_IzY",
-  authDomain: "einkaufsliste-3bd02.firebaseapp.com",
-  projectId: "einkaufsliste-3bd02",
-  storageBucket: "einkaufsliste-3bd02.firebasestorage.app",
-  messagingSenderId: "339434182545",
-  appId: "1:339434182545:web:560717e656df63e72cec30",
-  measurementId: "G-2Z3KG43NVV"
-};
+      apiKey: "AIzaSyDsGRrJTkdICxfey-G-Ux0Rzua9uqD_IzY",
+      authDomain: "einkaufsliste-3bd02.firebaseapp.com",
+      projectId: "einkaufsliste-3bd02",
+      storageBucket: "einkaufsliste-3bd02.firebasestorage.app",
+      messagingSenderId: "339434182545",
+      appId: "1:339434182545:web:560717e656df63e72cec30",
+      measurementId: "G-2Z3KG43NVV"
+    };
 
     const firebaseConfigured = true;
     const app = initializeApp(firebaseConfig);
